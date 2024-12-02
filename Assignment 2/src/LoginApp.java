@@ -6,7 +6,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-
+//THIS COMMENT IS BEING ADDED FRO TEST-BRANCH AFTER SETTING UP THE WORKFLOW RULES.
 public class LoginApp extends JFrame {
     private JTextField emailField;
     private JPasswordField passwordField;
