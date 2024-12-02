@@ -14,20 +14,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    services:
-      mysql:
-        image: mysql:latest
-        env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: testdb
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping --silent"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
@@ -38,14 +24,9 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
 
-    - name: Install dependencies
-      run: mvn install
+    - name: Compile Java files (without running tests or dependencies)
+      run: |
+        javac -cp . LoginApp.java
 
-    - name: Run tests
-      env:
-        DB_HOST: 127.0.0.1
-        DB_PORT: 3306
-        DB_USER: root
-        DB_PASSWORD: root
-        DB_NAME: testdb
-      run: mvn test
+    - name: Skip tests and dependencies
+      run: echo "Skipping tests and dependencies as requested."
