@@ -6,13 +6,13 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-//THIS COMMENT IS BEING ADDED FRO TEST-BRANCH AFTER SETTING UP THE WORKFLOW RULES.
+
 public class LoginApp extends JFrame {
     private JTextField emailField;
     private JPasswordField passwordField;
-    private static final String DB_URL = "jdbc:mysql://localhost:3306/softwaretesting";
+    public static String DB_URL = "jdbc:mysql://localhost:3306/st";
     private static final String DB_USER = "root";
-    private static final String DB_PASSWORD = "12345678";
+    private static final String DB_PASSWORD = "1234";
 
     public LoginApp() {
         setTitle("Login Screen");
@@ -23,17 +23,14 @@ public class LoginApp extends JFrame {
         JPanel panel = new JPanel();
         panel.setLayout(new GridLayout(3, 2, 10, 10));
 
-        // Email Label and Text Field
         panel.add(new JLabel("Email:"));
         emailField = new JTextField();
         panel.add(emailField);
 
-        // Password Label and Password Field
         panel.add(new JLabel("Password:"));
         passwordField = new JPasswordField();
         panel.add(passwordField);
 
-        // Login Button
         JButton loginButton = new JButton("Login");
         loginButton.addActionListener(new LoginAction());
         panel.add(loginButton);
@@ -45,40 +42,48 @@ public class LoginApp extends JFrame {
         @Override
         public void actionPerformed(ActionEvent e) {
             String email = emailField.getText();
-            String password = new String(passwordField.getPassword()); // Password is ignored for validation
-
-            String userName = authenticateUser(email);
-            if (userName != null) {
-                JOptionPane.showMessageDialog(null, "Welcome, " + userName + "!", "Login Successful", JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(null, "User not found.", "Login Failed", JOptionPane.ERROR_MESSAGE);
+            String password = new String(passwordField.getPassword());
+            try {
+                String name = authenticateUser(email, password);
+                if (name != null) {
+                    JOptionPane.showMessageDialog(null, "Welcome " + name + "!");
+                } else {
+                    JOptionPane.showMessageDialog(null, "Invalid email or password.");
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(null, "Error: " + ex.getMessage());
             }
         }
     }
 
-    private String authenticateUser(String email) {
-        String userName = null;
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
-            String query = "SELECT name FROM User WHERE Email = ?";
-            PreparedStatement stmt = conn.prepareStatement(query);
-            stmt.setString(1, email);
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                userName = rs.getString("Name");
-            }
-            rs.close();
-            stmt.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+    public static String authenticateUser(String email, String password) throws Exception {
+        if (DB_URL == null || DB_USER == null || DB_PASSWORD == null) {
+            throw new Exception("Database connection parameters are missing.");
         }
-        return userName;
+
+        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+            String query = "SELECT name FROM user WHERE email = ? AND password = ?";
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                statement.setString(1, email);
+                statement.setString(2, password);
+
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return resultSet.getString("name");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            throw new Exception("Database error: " + e.getMessage(), e);
+        }
+
+        return null;
     }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            LoginApp loginApp = new LoginApp();
-            loginApp.setVisible(true);
+            LoginApp app = new LoginApp();
+            app.setVisible(true);
         });
     }
 }
